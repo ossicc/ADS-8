@@ -53,8 +53,10 @@ class BST {
   }
 
   int depth(Node* node) const {
-    if (!node) return 0;
-    return 1 + std::max(depth(node->left), depth(node->right));
+    if (!node) return -1;
+    int leftDepth = depth(node->left);
+    int rightDepth = depth(node->right);
+    return 1 + std::max(leftDepth, rightDepth);
   }
 
   void clear(Node* node) {
@@ -91,4 +93,4 @@ class BST {
   }
 };
 
-#endif
+#endif  // INCLUDE_BST_H_
