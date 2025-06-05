@@ -2,12 +2,13 @@
 #ifndef INCLUDE_BST_H_
 #define INCLUDE_BST_H_
 
+#include <functional>
 #include <iostream>
 #include <string>
 
 template <typename T>
 class BST {
- private:
+ public:
   struct Node {
     T key;
     int count;
@@ -17,6 +18,7 @@ class BST {
     Node(T k) : key(k), count(1), left(nullptr), right(nullptr) {}
   };
 
+ private:
   Node* root;
 
   Node* insert(Node* node, T value) {
@@ -50,18 +52,19 @@ class BST {
     return 1 + std::max(depth(node->left), depth(node->right));
   }
 
-  void inOrder(Node* node, void (*visit)(Node*)) const {
-    if (!node) return;
-    inOrder(node->left, visit);
-    visit(node);
-    inOrder(node->right, visit);
-  }
-
   void clear(Node* node) {
     if (!node) return;
     clear(node->left);
     clear(node->right);
     delete node;
+  }
+
+  template <typename Func>
+  void inOrder(Node* node, Func visit) const {
+    if (!node) return;
+    inOrder(node->left, visit);
+    visit(node);
+    inOrder(node->right, visit);
   }
 
  public:
@@ -77,7 +80,10 @@ class BST {
 
   int depth() const { return depth(root); }
 
-  void inOrder(void (*visit)(Node*)) const { inOrder(root, visit); }
+  template <typename Func>
+  void inOrder(Func visit) const {
+    inOrder(root, visit);
+  }
 };
 
-#endif  // INCLUDE_BST_H_
+#endif
