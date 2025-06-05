@@ -2,6 +2,7 @@
 #ifndef INCLUDE_BST_H_
 #define INCLUDE_BST_H_
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -15,7 +16,11 @@ class BST {
     Node* left;
     Node* right;
 
-    Node(T k) : key(k), count(1), left(nullptr), right(nullptr) {}
+    explicit Node(T k)
+        : key(k),
+          count(1),
+          left(nullptr),
+          right(nullptr) {}
   };
 
  private:
