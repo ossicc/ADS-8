@@ -1,88 +1,83 @@
 // Copyright 2021 NNTU-CS
 #ifndef INCLUDE_BST_H_
 #define INCLUDE_BST_H_
+
+#include <iostream>
 #include <string>
-#include <vector>
-#include <utility>
+
 template <typename T>
-class BinarySearchTree {
-private:
-    struct TreeNode {
-        T value;
-        int occurrences;
-        TreeNode* leftChild;
-        TreeNode* rightChild;
+class BST {
+ private:
+  struct Node {
+    T key;
+    int count;
+    Node* left;
+    Node* right;
 
-        TreeNode(const T& val) 
-            : value(val), occurrences(1), leftChild(nullptr), rightChild(nullptr) {}
-    };
+    Node(T k) : key(k), count(1), left(nullptr), right(nullptr) {}
+  };
 
-    TreeNode* rootNode;
+  Node* root;
 
-    void addNode(TreeNode*& currentNode, const T& value) {
-        if (currentNode == nullptr) {
-            currentNode = new TreeNode(value);
-        } else if (value == currentNode->value) {
-            currentNode->occurrences++;
-        } else if (value < currentNode->value) {
-            addNode(currentNode->leftChild, value);
-        } else {
-            addNode(currentNode->rightChild, value);
-        }
+  Node* insert(Node* node, T value) {
+    if (!node) return new Node(value);
+
+    if (value == node->key) {
+      node->count++;
+    } else if (value < node->key) {
+      node->left = insert(node->left, value);
+    } else {
+      node->right = insert(node->right, value);
     }
 
-    int findOccurrences(TreeNode* currentNode, const T& value) const {
-        if (currentNode == nullptr) return 0;
-        if (value == currentNode->value) return currentNode->occurrences;
-        return value < currentNode->value ? 
-               findOccurrences(currentNode->leftChild, value) : 
-               findOccurrences(currentNode->rightChild, value);
+    return node;
+  }
+
+  Node* search(Node* node, T value) const {
+    if (!node || node->key == value) {
+      return node;
     }
 
-    int calculateDepth(TreeNode* currentNode) const {
-        if (currentNode == nullptr) return 0;
-        int leftHeight = calculateDepth(currentNode->leftChild);
-        int rightHeight = calculateDepth(currentNode->rightChild);
-        return 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
+    if (value < node->key) {
+      return search(node->left, value);
+    } else {
+      return search(node->right, value);
     }
+  }
 
-    void traverseInOrder(TreeNode* currentNode, std::vector<std::pair<T, int>>& output) const {
-        if (currentNode == nullptr) return;
-        traverseInOrder(currentNode->leftChild, output);
-        output.emplace_back(currentNode->value, currentNode->occurrences);
-        traverseInOrder(currentNode->rightChild, output);
-    }
+  int depth(Node* node) const {
+    if (!node) return 0;
+    return 1 + std::max(depth(node->left), depth(node->right));
+  }
 
-    void deleteTree(TreeNode* currentNode) {
-        if (currentNode == nullptr) return;
-        deleteTree(currentNode->leftChild);
-        deleteTree(currentNode->rightChild);
-        delete currentNode;
-    }
+  void inOrder(Node* node, void (*visit)(Node*)) const {
+    if (!node) return;
+    inOrder(node->left, visit);
+    visit(node);
+    inOrder(node->right, visit);
+  }
 
-public:
-    BinarySearchTree() : rootNode(nullptr) {}
+  void clear(Node* node) {
+    if (!node) return;
+    clear(node->left);
+    clear(node->right);
+    delete node;
+  }
 
-    ~BinarySearchTree() {
-        deleteTree(rootNode);
-    }
+ public:
+  BST() : root(nullptr) {}
+  ~BST() { clear(root); }
 
-    void insert(const T& value) {
-        addNode(rootNode, value);
-    }
+  void insert(T value) { root = insert(root, value); }
 
-    int search(const T& value) const {
-        return findOccurrences(rootNode, value);
-    }
+  int search(T value) const {
+    Node* node = search(root, value);
+    return node ? node->count : 0;
+  }
 
-    int depth() const {
-        return calculateDepth(rootNode);
-    }
+  int depth() const { return depth(root); }
 
-    std::vector<std::pair<T, int>> toVector() const {
-        std::vector<std::pair<T, int>> output;
-        traverseInOrder(rootNode, output);
-        return output;
-    }
+  void inOrder(void (*visit)(Node*)) const { inOrder(root, visit); }
 };
+
 #endif  // INCLUDE_BST_H_
