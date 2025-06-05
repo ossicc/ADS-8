@@ -1,7 +1,6 @@
 // Copyright 2021 NNTU-CS
 #include <algorithm>
 #include <cctype>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -9,47 +8,49 @@
 
 #include "bst.h"
 
-void populateTreeFromFile(BST<std::string>& tree, const char* filePath) {
-  std::ifstream inputFile(filePath);
-  if (!inputFile.is_open()) return;
-
-  std::string currentWord;
-  char character;
-  while (inputFile.get(character)) {
-    if (std::isalpha(static_cast<unsigned char>(character))) {
-      currentWord += std::tolower(static_cast<unsigned char>(character));
-    } else {
-      if (!currentWord.empty()) {
-        tree.insert(currentWord);
-        currentWord.clear();
-      }
-    }
-  }
-  if (!currentWord.empty()) {
-    tree.insert(currentWord);
-  }
-  inputFile.close();
-}
-
-void displayFrequencies(const BST<std::string>& tree) {
-  auto frequencyList = tree.toVector();
-  std::sort(
-      frequencyList.begin(), frequencyList.end(),
-      [](const auto& lhs, const auto& rhs) { return lhs.second > rhs.second; });
-
-  if (!std::filesystem::exists("result")) {
-    std::filesystem::create_directory("result");
-  }
-
-  std::ofstream outputFile("result/freq.txt");
-  if (!outputFile.is_open()) {
-    std::cerr << "Ошибка при открытии файла для записи." << std::endl;
+void makeTree(BST<std::string>& tree, const char* filename) {
+  std::ifstream file(filename);
+  if (!file) {
+    std::cerr << "Ошибка открытия файла!" << std::endl;
     return;
   }
 
-  for (const auto& entry : frequencyList) {
-    std::cout << entry.first << " - " << entry.second << std::endl;
-    outputFile << entry.first << " - " << entry.second << std::endl;
+  std::string currentWord;
+  char ch;
+  while (file.get(ch)) {
+    if (std::isalpha(static_cast<unsigned char>(ch))) {
+      currentWord += std::tolower(static_cast<unsigned char>(ch));
+    } else if (!currentWord.empty()) {
+      tree.insert(currentWord);
+      currentWord.clear();
+    }
   }
-  outputFile.close();
+
+  if (!currentWord.empty()) {
+    tree.insert(currentWord);
+  }
+  file.close();
+}
+
+void printFreq(BST<std::string>& tree) {
+  std::vector<std::pair<std::string, int>> words;
+
+  auto collect = [&words](typename BST<std::string>::Node* node) {
+    words.emplace_back(node->key, node->count);
+  };
+
+  tree.inOrder(collect);
+
+  std::sort(words.begin(), words.end(),
+            [](const auto& a, const auto& b) { return a.second > b.second; });
+
+  for (const auto& [word, count] : words) {
+    std::cout << word << ": " << count << std::endl;
+  }
+
+  std::ofstream out("result/freq.txt");
+  for (const auto& [word, count] : words) {
+    out << word << ": " << count << std::endl;
+  }
+  out.close();
 }
